@@ -8,29 +8,17 @@ use SocialiteProviders\Manager\OAuth2\User;
 
 class Provider extends AbstractProvider implements ProviderInterface
 {
-    /**
-     * Unique Provider Identifier.
-     */
     const IDENTIFIER = 'WEWORK';
 
-    /**
-     * {@inheritdoc}
-     */
     protected $agentId;
     protected $scopes = [];
 
-    /**
-     * {@inheritdoc}
-     */
     public function setAgentId($agentId)
     {
         $this->agentId = $agentId;
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getAuthUrl($state)
     {
         if (!empty($this->scopes)) {
@@ -63,20 +51,17 @@ class Provider extends AbstractProvider implements ProviderInterface
         return 'https://open.work.weixin.qq.com/wwopen/sso/qrConnect?'.http_build_query($queries);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getTokenUrl()
     {
         return 'https://qyapi.weixin.qq.com/cgi-bin/gettoken';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getUserByToken($token)
     {
         $userInfo = $this->getUserInfo($token);
+        if (!isset($userInfo['UserId'])) {
+            abort(401);
+        }
         return $this->getUserDetail($token, $userInfo['UserId']);
     }
 
@@ -102,9 +87,6 @@ class Provider extends AbstractProvider implements ProviderInterface
         return json_decode($response->getBody(), true);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
@@ -115,9 +97,6 @@ class Provider extends AbstractProvider implements ProviderInterface
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getTokenFields($code)
     {
         return [
@@ -126,9 +105,6 @@ class Provider extends AbstractProvider implements ProviderInterface
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAccessTokenResponse($code)
     {
         $response = $this->getHttpClient()->get($this->getTokenUrl(), [
